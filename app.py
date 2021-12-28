@@ -129,7 +129,7 @@ def recomeda(index):
 
   distance = list(enumerate(matrixDescription[index2]))
   ordenados_por_resena = sorted(distance, key=lambda x: x[1])
-  top_index = ordenados_por_resena[1:10]
+  top_index = ordenados_por_resena[1:11]
   top = [i[0] for i in top_index]
 
   return df_to_recomend.iloc[top]
@@ -182,7 +182,7 @@ def main():
 
     st.markdown(html_temp.format('royalblue','white'),unsafe_allow_html=True)
 
-    menu = ["Home","Iniciar Sesión","Registrarse","Encuentra tu whisky","Recomendador de whisky"]
+    menu = ["Home","Recomendador de whisky","Iniciar Sesión","Registrarse"]
     choice = st.sidebar.selectbox("Menu",menu)
 
     if choice == "Iniciar Sesión":
@@ -248,8 +248,10 @@ def main():
                         st.write(grid_response['selected_rows'])
 
                     if st.button("Guardar Whisky"):
-                        add_whisky(selected_df['name'])
-
+                        if selected_df.empty:
+                            st.caption("No puedes almacenar si no has seleccionado ningún whisky") 
+                        else:
+                            add_whisky(selected_df['name'])
                     
                 elif choiceUser == "Mis whiskys":  
                     mis_whiskys = viewWhiskys() 
@@ -263,7 +265,7 @@ def main():
                     grid_response = AgGrid(
                     mis_whiskys, 
                     gridOptions=gridOptions,
-                    height=300, 
+                    height=150, 
                     width='100%',
                     data_return_mode=return_mode_value, 
                     update_mode=update_mode_value,
@@ -294,21 +296,12 @@ def main():
 
 
     elif choice == "Home":
-        st.write("")
-        st.subheader("Lista de todos los whiskys")
-        st.write("")
-        st.write(df)
-        st.write("")
-        st.write("")
-        
-        
-    elif choice == "Encuentra tu whisky":
+
         st.subheader("Encuentra tu whisky ideal")
         df_muestra = df
 
-        st.write("Categoria")
         categorias = df['category'].unique()
-        categoria = st.selectbox('Nombre', categorias)
+        categoria = st.selectbox('Categoria', categorias)
         df_muestra = df[df['category'] == categoria]
 
         st.write("Precio")
@@ -324,7 +317,9 @@ def main():
         rg_rev = st.slider('Rating',int(ratings.min()),int(ratings.max()),(80,85))                 
         df_muestra = filtradoNumerico('review.point',rg_rev[0],rg_rev[1],True,df_muestra)
         
-        df_muestra            
+        df_muestra  
+
+          
 
     elif choice == "Recomendador de whisky":
         nombres = df['name'].unique()
@@ -360,8 +355,14 @@ def add_userdata(username,password):
     conn.commit()
 
 def add_whisky(whisky):
-    c.execute('INSERT INTO userstable(whiskys) VALUES (?)',(whisky))
-    conn.commit()
+    try:
+        if whisky is not None:
+            c.execute('INSERT INTO userstable(whiskys) VALUES (?)',(whisky))
+            conn.commit()
+    except:
+        st.error('Ya has guardado este whisky')
+    else:
+        st.success('Whisky guardado')
 
 def login_user(username,password):
     c.execute('SELECT * FROM userstable WHERE username =? AND password = ?',(username,password))
@@ -374,16 +375,14 @@ def view_all_users():
     return data
 
 def viewWhiskys():
-    cont = 0
     toret = pd.DataFrame()
     c.execute('SELECT whiskys FROM userstable')
     data= c.fetchall()
     for i in data:
-        if cont > 0:
+        if str(i[0]) != 'None':
             index = getIndex(i[0], df)
             new_row = df.iloc[index]
-            toret = addWhisky(new_row,toret)
-        cont = cont+1   
+            toret = addWhisky(new_row,toret) 
     return toret
 
 
