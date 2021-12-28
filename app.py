@@ -22,6 +22,7 @@ global df
 url = 'https://raw.githubusercontent.com/AnHell999/Whisky/main/scotch_review.csv'
 df = pd.read_csv(url)
 df = df.drop(['currency', 'Unnamed: 0'], axis=1)
+df = df.rename(columns={'review.point':'review'})
 df[['review']].astype(int)
 df['price'] = pd.to_numeric(df['price'])
 df_copy  = df.copy(True) 
