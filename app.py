@@ -297,7 +297,7 @@ def main():
 
 
     elif choice == "Home":
-
+        
         st.subheader("Encuentra tu whisky ideal")
         df_muestra = df
 
