@@ -206,15 +206,14 @@ def main():
                 if choiceUser == "Recomendador de whiskys":
                     nombres = df['name'].unique()
                     st.write("")
-                    nombre = st.selectbox('Introduce tu Whisky favorito\n', nombres)
-  
 
+                    nombre = st.selectbox('Introduzca su Whisky favorito, caballero\n', nombres)
                     index = getIndex(nombre,df)
-                
+    
                     recomendacion = recomeda(index)
                     recomendacionP=recomendacion[['name','price']]
                 
-                    st.caption("Tus 10 recomendaciones personalizadas:")
+                    st.caption("Sus 10 recomendaciones personalizadas:")
 
                     gb = GridOptionsBuilder.from_dataframe(recomendacionP)
                     gb.configure_default_column(groupable=True, value=True, enableRowGroup=True, aggFunc='sum', editable=True)
@@ -245,7 +244,7 @@ def main():
                             chart_data = pd.concat([chart_data, selected_data])
 
 
-                        st.subheader("Whisky seleccionado:")
+                        st.subheader("Su whisky, caballero:")
                         st.write(grid_response['selected_rows'])
 
                     if st.button("Guardar Whisky"):
@@ -325,7 +324,7 @@ def main():
     elif choice == "Recomendador de whisky":
         nombres = df['name'].unique()
         st.write("")
-        nombre = st.selectbox('Tu Whisky favorito\n', nombres)
+        nombre = st.selectbox('Su Whisky favorito\n', nombres)
         df[df['name'] == nombre]
 
         index = getIndex(nombre,df)
@@ -342,10 +341,11 @@ def main():
         gb.configure_pagination()
         gridOptions = gb.build()
 
+        st.write("")
         grid_response = AgGrid(
         df, 
         gridOptions=gridOptions,
-        height=600, 
+        height=410, 
         width='100%',
         data_return_mode=return_mode_value, 
         update_mode=update_mode_value,
@@ -363,7 +363,7 @@ def main():
                 selected_data = selected_df.loc[:,['name']].assign(source='selection')
                 chart_data = pd.concat([chart_data, selected_data])
 
-            st.subheader("Whisky seleccionado:")
+            st.subheader("Su whisky, caballero:")
             st.write(grid_response['selected_rows'])
 
 
