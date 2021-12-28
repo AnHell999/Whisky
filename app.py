@@ -22,7 +22,7 @@ global df
 url = 'https://raw.githubusercontent.com/AnHell999/Whisky/main/scotch_review.csv'
 df = pd.read_csv(url)
 df = df.drop(['currency', 'Unnamed: 0'], axis=1)
-df[['review.point']].astype(int)
+df[['review']].astype(int)
 df['price'] = pd.to_numeric(df['price'])
 df_copy  = df.copy(True) 
 
@@ -182,7 +182,7 @@ def main():
 
     st.markdown(html_temp.format('royalblue','white'),unsafe_allow_html=True)
 
-    menu = ["Home","Recomendador de whisky","Iniciar Sesión","Registrarse"]
+    menu = ["Home","Recomendador de whisky","Nuestros Whiskys","Iniciar Sesión","Registrarse"]
     choice = st.sidebar.selectbox("Menu",menu)
 
     if choice == "Iniciar Sesión":
@@ -211,7 +211,7 @@ def main():
                     index = getIndex(nombre,df)
                 
                     recomendacion = recomeda(index)
-                    recomendacionP=recomendacion[['name','description']]
+                    recomendacionP=recomendacion[['name','price']]
                 
                     st.caption("Tus 10 recomendaciones personalizadas:")
 
@@ -224,7 +224,7 @@ def main():
                     grid_response = AgGrid(
                         recomendacionP, 
                         gridOptions=gridOptions,
-                        height=300, 
+                        height=315, 
                         width='100%',
                         data_return_mode=return_mode_value, 
                         update_mode=update_mode_value,
@@ -313,9 +313,9 @@ def main():
             precio_max = precios.max()
         df_muestra = filtradoNumerico('price',precio_min,precio_max,True,df_muestra)
 
-        ratings = df_muestra['review.point'].unique()
+        ratings = df_muestra['review'].unique()
         rg_rev = st.slider('Rating',int(ratings.min()),int(ratings.max()),(80,85))                 
-        df_muestra = filtradoNumerico('review.point',rg_rev[0],rg_rev[1],True,df_muestra)
+        df_muestra = filtradoNumerico('review',rg_rev[0],rg_rev[1],True,df_muestra)
         
         df_muestra  
 
@@ -331,6 +331,39 @@ def main():
     
         recomendacion = recomeda(index)
         st.dataframe(recomendacion[['name','description']])
+
+    elif choice == "Nuestros Whiskys":
+
+        gb = GridOptionsBuilder.from_dataframe(df)
+        gb.configure_default_column(groupable=True, value=True, enableRowGroup=True, aggFunc='sum', editable=True)
+        gb.configure_selection('single')                    
+        gb.configure_grid_options(domLayout='normal')
+        gb.configure_pagination()
+        gridOptions = gb.build()
+
+        grid_response = AgGrid(
+        df, 
+        gridOptions=gridOptions,
+        height=600, 
+        width='100%',
+        data_return_mode=return_mode_value, 
+        update_mode=update_mode_value,
+        fit_columns_on_grid_load=fit_columns_on_grid_load,
+        )
+
+        recomendacionP = grid_response['data']
+        selected = grid_response['selected_rows']
+        selected_df = pd.DataFrame(selected)
+ 
+        with st.spinner("Displaying results..."):
+            chart_data = recomendacionP.loc[:,['name']].assign(source='total')
+
+            if not selected_df.empty:
+                selected_data = selected_df.loc[:,['name']].assign(source='selection')
+                chart_data = pd.concat([chart_data, selected_data])
+
+            st.subheader("Whisky seleccionado:")
+            st.write(grid_response['selected_rows'])
 
 
 import hashlib
