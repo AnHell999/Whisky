@@ -255,6 +255,7 @@ def main():
                     
                 elif choiceUser == "Mis whiskys":  
                     mis_whiskys = viewWhiskys() 
+                    mis_whiskysP=mis_whiskys[['name','price']]
 
                     gb = GridOptionsBuilder.from_dataframe(mis_whiskys)
                     gb.configure_default_column(groupable=True, value=True, enableRowGroup=True, aggFunc='sum', editable=True)
@@ -272,14 +273,34 @@ def main():
                     fit_columns_on_grid_load=fit_columns_on_grid_load,
                     )
 
-                    left, right = st.columns(2)
-                    with left:
-                        st.button("👍")
-                    with right:
-                        st.button("👎")
+                    mis_whiskysP = grid_response['data']
+                    select = grid_response['selected_rows']
+                    select_df = pd.DataFrame(select)
 
-                    if st.text_input("comm"):
-                        st.write("comment")
+                    with st.spinner("Displaying results..."):
+                        chart_data = mis_whiskysP.loc[:,['name']].assign(source='total')
+
+                        if not select_df.empty:
+                            selected_data = select_df.loc[:,['name']].assign(source='selection')
+                            chart_data = pd.concat([chart_data, selected_data])
+
+
+                    st.caption("Caballero, ¿el whisky proporcionado ha sido de su agrado?")
+                    left, right, = st.columns([0.08,1])
+                    
+                    with left:
+                        if st.button("👍"):
+                            if select_df.empty:
+                                st.caption("SeleccionaUnWhisky") 
+                            else:
+                                st.caption("Likeado") 
+                    
+                    with right:
+                        if st.button("👎"):
+                                if select_df.empty:
+                                    st.caption("SeleccionaUnWhisky") 
+                                else:
+                                    st.caption("dislikeado") 
             else:
                 st.warning("Incorrect Username/Password")
 
