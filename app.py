@@ -8,7 +8,7 @@ import numpy as np
 import altair as alt
 from itertools import cycle
 from st_aggrid import  GridOptionsBuilder, AgGrid, GridUpdateMode, DataReturnMode, JsCode
-
+import hashlib
 import sklearn
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics import pairwise_distances
@@ -23,6 +23,8 @@ url = 'https://raw.githubusercontent.com/AnHell999/Whisky/main/scotch_review.csv
 df = pd.read_csv(url)
 df = df.drop(['currency', 'Unnamed: 0'], axis=1)
 df = df.rename(columns={'review.point':'review'})
+df['likes'] = 0
+df[['likes']].astype(int)
 df[['review']].astype(int)
 df['price'] = pd.to_numeric(df['price'])
 df_copy  = df.copy(True) 
@@ -135,8 +137,15 @@ def recomeda(index):
 
   return df_to_recomend.iloc[top]
 
-def addWhisky(new_row, dfadd):                                                         #la nueva fila viene en forma de array y se trata dentro de la funcion 
-  return dfadd.append(new_row, ignore_index=True)                   
+def addWhisky(new_row, dfadd):                                                         
+  return dfadd.append(new_row, ignore_index=True)
+
+def like(i, param, df_tmp):
+    actual = df['likes'].iloc[i]
+    if(param):
+        df_tmp.at[i,{'likes'}] = actual+1                  
+    else:
+        df_tmp.at[i,{'likes'}] = actual-1
 
 # Layout Templates
 html_temp = """
@@ -211,7 +220,8 @@ def main():
                     index = getIndex(nombre,df)
     
                     recomendacion = recomeda(index)
-                    recomendacionP=recomendacion[['name','price']]
+                    recomendacionP=recomendacion[['name','price','description']]
+                  
                 
                     st.caption("Sus 10 recomendaciones personalizadas:")
 
@@ -222,7 +232,7 @@ def main():
                     gridOptions = gb.build()
 
                     grid_response = AgGrid(
-                        recomendacionP, 
+                        recomendacionP,
                         gridOptions=gridOptions,
                         height=315, 
                         width='100%',
@@ -231,7 +241,7 @@ def main():
                         fit_columns_on_grid_load=fit_columns_on_grid_load,
                         allow_unsafe_jscode=True, 
                         )
-
+                    
                     recomendacionP = grid_response['data']
                     selected = grid_response['selected_rows']
                     selected_df = pd.DataFrame(selected)
@@ -291,16 +301,21 @@ def main():
                     with left:
                         if st.button("👍"):
                             if select_df.empty:
-                                st.caption("SeleccionaUnWhisky") 
+                                st.caption("SeleccioneUnWhisky") 
                             else:
-                                st.caption("Likeado") 
+                                nombre = select_df['name'].iloc[0]
+                                i = getIndex(nombre,df)
+                                like(i, True, df)
                     
                     with right:
                         if st.button("👎"):
                                 if select_df.empty:
-                                    st.caption("SeleccionaUnWhisky") 
+                                    st.caption("SeleccioneUnWhisky") 
                                 else:
-                                    st.caption("dislikeado") 
+                                    nombre = select_df['name'].iloc[0]
+                                    i = getIndex(nombre,df)
+                                    like(i, False, df)
+                    df
             else:
                 st.warning("Incorrect Username/Password")
 
@@ -388,7 +403,6 @@ def main():
             st.write(grid_response['selected_rows'])
 
 
-import hashlib
 def make_hashes(password):
     return hashlib.sha256(str.encode(password)).hexdigest()
 
