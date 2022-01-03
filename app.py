@@ -265,57 +265,55 @@ def main():
                     
                 elif choiceUser == "Mis whiskys":  
                     mis_whiskys = viewWhiskys() 
-                    mis_whiskysP=mis_whiskys[['name','price']]
+                    try:
+                        mis_whiskysP=mis_whiskys[['name','price']]
+                        gb = GridOptionsBuilder.from_dataframe(mis_whiskys)
+                        gb.configure_default_column(groupable=True, value=True, enableRowGroup=True, aggFunc='sum', editable=True)
+                        gb.configure_selection('single')                    
+                        gb.configure_grid_options(domLayout='normal')
+                        gridOptions = gb.build()
 
-                    gb = GridOptionsBuilder.from_dataframe(mis_whiskys)
-                    gb.configure_default_column(groupable=True, value=True, enableRowGroup=True, aggFunc='sum', editable=True)
-                    gb.configure_selection('single')                    
-                    gb.configure_grid_options(domLayout='normal')
-                    gridOptions = gb.build()
+                        grid_response = AgGrid(
+                        mis_whiskys, 
+                        gridOptions=gridOptions,
+                        height=150, 
+                        width='100%',
+                        data_return_mode=return_mode_value, 
+                        update_mode=update_mode_value,
+                        fit_columns_on_grid_load=fit_columns_on_grid_load,
+                        )
 
-                    grid_response = AgGrid(
-                    mis_whiskys, 
-                    gridOptions=gridOptions,
-                    height=150, 
-                    width='100%',
-                    data_return_mode=return_mode_value, 
-                    update_mode=update_mode_value,
-                    fit_columns_on_grid_load=fit_columns_on_grid_load,
-                    )
+                        mis_whiskysP = grid_response['data']
+                        select = grid_response['selected_rows']
+                        select_df = pd.DataFrame(select)
 
-                    mis_whiskysP = grid_response['data']
-                    select = grid_response['selected_rows']
-                    select_df = pd.DataFrame(select)
+                        with st.spinner("Displaying results..."):
+                            chart_data = mis_whiskysP.loc[:,['name']].assign(source='total')
 
-                    with st.spinner("Displaying results..."):
-                        chart_data = mis_whiskysP.loc[:,['name']].assign(source='total')
-
-                        if not select_df.empty:
-                            selected_data = select_df.loc[:,['name']].assign(source='selection')
-                            chart_data = pd.concat([chart_data, selected_data])
+                            if not select_df.empty:
+                                selected_data = select_df.loc[:,['name']].assign(source='selection')
+                                chart_data = pd.concat([chart_data, selected_data])
 
 
-                    st.caption("Caballero, ¿el whisky proporcionado ha sido de su agrado?")
-                    left, right, = st.columns([0.08,1])
-                    
-                    with left:
-                        if st.button("👍"):
-                            if select_df.empty:
-                                st.caption("SeleccioneUnWhisky") 
-                            else:
-                                nombre = select_df['name'].iloc[0]
-                                i = getIndex(nombre,df)
-                                like(i, True, df)
-                    
-                    with right:
-                        if st.button("👎"):
+                        st.caption("Caballero, ¿el whisky proporcionado ha sido de su agrado?")
+                        left, right, = st.columns([0.08,1])
+                        
+                        with left:
+                            if st.button("👍"):
                                 if select_df.empty:
                                     st.caption("SeleccioneUnWhisky") 
                                 else:
-                                    nombre = select_df['name'].iloc[0]
-                                    i = getIndex(nombre,df)
-                                    like(i, False, df)
-                    df
+                                    st.caption("Like") 
+                        
+                        with right:
+                            if st.button("👎"):
+                                if select_df.empty:
+                                    st.caption("SeleccioneUnWhisky") 
+                                else:
+                                    st.caption("Dislike")
+                    
+                    except:
+                        st.error("No hay whiskys que visualizar")
             else:
                 st.warning("Incorrect Username/Password")
 
@@ -453,6 +451,9 @@ def viewWhiskys():
             new_row = df.iloc[index]
             toret = addWhisky(new_row,toret) 
     return toret
+    
+        
+    
 
 
 if __name__ == '__main__':
