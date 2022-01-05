@@ -23,8 +23,6 @@ url = 'https://raw.githubusercontent.com/AnHell999/Whisky/main/scotch_review.csv
 df = pd.read_csv(url)
 df = df.drop(['currency', 'Unnamed: 0'], axis=1)
 df = df.rename(columns={'review.point':'review'})
-df['likes'] = 0
-df[['likes']].astype(int)
 df[['review']].astype(int)
 df['price'] = pd.to_numeric(df['price'])
 df_copy  = df.copy(True) 
@@ -348,8 +346,10 @@ def main():
         df_muestra = filtradoNumerico('price',precio_min,precio_max,True,df_muestra)
 
         ratings = df_muestra['review'].unique()
-        rg_rev = st.slider('Rating',int(ratings.min()),int(ratings.max()),(80,85))                 
+        rg_rev = st.slider('Rating',int(ratings.min()),int(ratings.max()),(67,int(ratings.max())))                 
         df_muestra = filtradoNumerico('review',rg_rev[0],rg_rev[1],True,df_muestra)
+
+       
         
         df_muestra  
 
@@ -364,6 +364,8 @@ def main():
         index = getIndex(nombre,df)
     
         recomendacion = recomeda(index)
+
+        st.caption("Sus 10 recomendaciones")
         st.dataframe(recomendacion[['name','description']])
 
     elif choice == "Nuestros Whiskys":
